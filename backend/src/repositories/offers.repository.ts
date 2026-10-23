@@ -1,15 +1,18 @@
 import type { Db } from "../db/database.ts";
-import type { OfferDbo, OfferStatus } from "../models/offer.ts";
+import type { OfferDbo, OfferStatus, PeriodCode } from "../models/offer.ts";
 
 export interface OfferFilter {
   /** Limite aux offres de ce statut. */
   status?: OfferStatus;
+  /** Limite aux offres de cette période. */
+  period?: PeriodCode;
   /** Limite aux offres déposées par ce contact. */
   depositorContactId?: number;
 }
 
 interface FindAllParams {
   status: OfferStatus | null;
+  period: PeriodCode | null;
   depositorContactId: number | null;
 }
 
@@ -25,14 +28,19 @@ export const createOffersRepository = (db: Db) => {
     JOIN academic_years ay ON ay.id = o.academic_year_id
     JOIN periods p ON p.id = o.period_id
     WHERE (@status IS NULL OR o.status = @status)
+      AND (@period IS NULL OR p.code = @period)
       AND (@depositorContactId IS NULL OR o.depositor_contact_id = @depositorContactId)
     ORDER BY ay.start_date DESC, o.created_at DESC
   `);
 
   return {
     /** Offres correspondant au filtre, de la plus récente année à la plus ancienne. */
-    findAll: ({ status, depositorContactId }: OfferFilter): OfferDbo[] =>
-      findAll.all({ status: status ?? null, depositorContactId: depositorContactId ?? null }),
+    findAll: ({ status, period, depositorContactId }: OfferFilter): OfferDbo[] =>
+      findAll.all({
+        status: status ?? null,
+        period: period ?? null,
+        depositorContactId: depositorContactId ?? null,
+      }),
   };
 };
 
