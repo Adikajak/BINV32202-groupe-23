@@ -34,6 +34,17 @@ Authorization: {{admin.response.body.token}}
 GET http://localhost:3000/offers
 Authorization: {{student.response.body.token}}
 
+### Candidater à une offre publiée
+POST http://localhost:3000/applications
+Authorization: {{student.response.body.token}}
+Content-Type: application/json
+
+{ "offerId": 7, "message": "Le sujet m'intéresse particulièrement." }
+
+### Retirer une candidature (remplacer 7 par l'identifiant retourné)
+DELETE http://localhost:3000/applications/7
+Authorization: {{student.response.body.token}}
+
 ### Offres vues par le déposant
 GET http://localhost:3000/offers
 Authorization: {{depositor.response.body.token}}

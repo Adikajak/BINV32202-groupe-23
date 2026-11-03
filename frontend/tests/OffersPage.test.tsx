@@ -74,4 +74,61 @@ describe("OffersPage", () => {
 
     await waitFor(() => expect(onUnauthorized).toHaveBeenCalled());
   });
+
+  it("permet à un étudiant de candidater avec un message facultatif", async () => {
+    const fetchMock = stubFetch({
+      "/api/offers": () => Response.json([{ ...offers[0], status: "PUBLISHED" }]),
+      "/api/applications": () =>
+        Response.json({
+          id: 8,
+          offerId: 2,
+          message: "Mon message",
+          status: "IN_PROGRESS",
+          appliedAt: "2026-10-15 12:00:00",
+        }),
+    });
+
+    render(<OffersPage user={studentUser} token="jeton" onUnauthorized={vi.fn()} />);
+    await screen.findByText("Refonte du portail client");
+    fireEvent.click(screen.getByRole("button", { name: "Candidater" }));
+    fireEvent.change(screen.getByRole("textbox", { name: /Message pour/ }), {
+      target: { value: "Mon message" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Envoyer" }));
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/applications",
+        expect.objectContaining({
+          method: "POST",
+          body: JSON.stringify({ offerId: 2, message: "Mon message" }),
+        }),
+      ),
+    );
+  });
+
+  it("permet à un étudiant de retirer une candidature en cours", async () => {
+    const fetchMock = stubFetch({
+      "/api/offers": () =>
+        Response.json([
+          {
+            ...offers[0],
+            status: "PUBLISHED",
+            application: { id: 8, status: "IN_PROGRESS" },
+          },
+        ]),
+      "/api/applications/8": () => new Response(null, { status: 204 }),
+    });
+
+    render(<OffersPage user={studentUser} token="jeton" onUnauthorized={vi.fn()} />);
+    await screen.findByText("Refonte du portail client");
+    fireEvent.click(screen.getByRole("button", { name: "Retirer" }));
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/applications/8",
+        expect.objectContaining({ method: "DELETE" }),
+      ),
+    );
+  });
 });

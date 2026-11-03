@@ -13,4 +13,6 @@ export interface Offer {
   academicYear: string;
   period: PeriodCode;
   status: OfferStatus;
+  application?: { id: number; status: ApplicationStatus } | null;
 }
+import type { ApplicationStatus } from "./application.ts";

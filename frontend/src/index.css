@@ -200,6 +200,15 @@ body {
   background-color: #dbeafe;
 }
 
+.button-link {
+  color: #1d4ed8;
+  background-color: transparent;
+}
+
+.button-link:hover {
+  text-decoration: underline;
+}
+
 .demo-banner {
   margin: 0;
   padding: 0.375rem 1.5rem;

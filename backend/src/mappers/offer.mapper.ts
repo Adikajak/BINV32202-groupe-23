@@ -11,6 +11,10 @@ export const toOffer = (dbo: OfferDbo): Offer => ({
   period: dbo.period_code,
   createdAt: dbo.created_at,
   updatedAt: dbo.updated_at,
+  application:
+    dbo.application_id === null || dbo.application_status === null
+      ? null
+      : { id: dbo.application_id, status: dbo.application_status },
 });
 
 export const toOfferDto = (offer: Offer): OfferDto => ({
@@ -20,4 +24,5 @@ export const toOfferDto = (offer: Offer): OfferDto => ({
   academicYear: offer.academicYear,
   period: offer.period,
   status: offer.status,
+  ...(offer.application === undefined ? {} : { application: offer.application }),
 });

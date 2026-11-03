@@ -29,7 +29,7 @@ const PERIOD_OPTIONS: { value: PeriodCode | ""; label: string }[] = [
 
 const OffersPage = ({ user, token, onUnauthorized }: OffersPageProps) => {
   const [period, setPeriod] = useState<PeriodCode | "">("");
-  const { offers, isLoading, error } = useOffers(
+  const { offers, isLoading, error, reload } = useOffers(
     token,
     period === "" ? undefined : period,
     onUnauthorized,
@@ -48,7 +48,13 @@ const OffersPage = ({ user, token, onUnauthorized }: OffersPageProps) => {
         <p className="result-count">
           {offers.length} offre{offers.length > 1 ? "s" : ""}
         </p>
-        <OfferTable offers={offers} />
+        <OfferTable
+          offers={offers}
+          isStudent={user.kind === "STUDENT"}
+          token={token}
+          onUnauthorized={onUnauthorized}
+          onChanged={reload}
+        />
       </>
     );
   };
