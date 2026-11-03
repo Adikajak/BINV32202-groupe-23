@@ -1,6 +1,11 @@
 import { COMPANY_STATUSES, type Company, type CompanyStatus } from "../models/company.ts";
 import type { Health } from "../models/health.ts";
-import { OFFER_STATUSES, PERIOD_CODES, type Offer } from "../models/offer.ts";
+import {
+  OFFER_STATUSES,
+  PERIOD_CODES,
+  type Offer,
+} from "../models/offer.ts";
+import { APPLICATION_STATUSES } from "../models/application.ts";
 import {
   CONTACT_ROLES,
   USER_KINDS,
@@ -60,7 +65,12 @@ export const isOffer = (value: unknown): value is Offer =>
   typeof value.companyShortName === "string" &&
   typeof value.academicYear === "string" &&
   isOneOf(PERIOD_CODES, value.period) &&
-  isOneOf(OFFER_STATUSES, value.status);
+  isOneOf(OFFER_STATUSES, value.status) &&
+  (value.application === undefined ||
+    value.application === null ||
+    (isRecord(value.application) &&
+      typeof value.application.id === "number" &&
+      isOneOf(APPLICATION_STATUSES, value.application.status)));
 
 export const isOfferList = (value: unknown): value is Offer[] =>
   Array.isArray(value) && value.every(isOffer);

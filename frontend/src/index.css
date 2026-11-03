@@ -104,6 +104,11 @@ body {
   color: #4b5563;
 }
 
+.application-message {
+  display: block;
+  color: #4b5563;
+}
+
 /* Tableaux */
 
 .table-wrapper {
@@ -198,6 +203,15 @@ body {
 
 .button-light:hover {
   background-color: #dbeafe;
+}
+
+.button-link {
+  color: #1d4ed8;
+  background-color: transparent;
+}
+
+.button-link:hover {
+  text-decoration: underline;
 }
 
 .demo-banner {

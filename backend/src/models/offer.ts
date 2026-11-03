@@ -1,3 +1,5 @@
+import type { ApplicationStatus } from "./application.ts";
+
 export const OFFER_STATUSES = ["SUBMITTED", "PENDING", "PUBLISHED", "ASSIGNED", "ARCHIVED"] as const;
 
 export type OfferStatus = (typeof OFFER_STATUSES)[number];
@@ -17,6 +19,8 @@ export interface OfferDbo {
   period_code: PeriodCode;
   created_at: string;
   updated_at: string;
+  application_id: number | null;
+  application_status: ApplicationStatus | null;
 }
 
 export interface Offer {
@@ -30,6 +34,7 @@ export interface Offer {
   period: PeriodCode;
   createdAt: string;
   updatedAt: string;
+  application?: { id: number; status: ApplicationStatus } | null;
 }
 
 /** Offre exposée par l'API dans les listes. */
@@ -40,4 +45,5 @@ export interface OfferDto {
   academicYear: string;
   period: PeriodCode;
   status: OfferStatus;
+  application?: { id: number; status: ApplicationStatus } | null;
 }

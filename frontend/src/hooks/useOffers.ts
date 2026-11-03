@@ -15,6 +15,7 @@ export const useOffers = (
   const [offers, setOffers] = useState<Offer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -36,7 +37,7 @@ export const useOffers = (
       });
 
     return () => controller.abort();
-  }, [token, period, onUnauthorized]);
+  }, [token, period, onUnauthorized, reloadKey]);
 
-  return { offers, isLoading, error };
+  return { offers, isLoading, error, reload: () => setReloadKey((key) => key + 1) };
 };
