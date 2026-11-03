@@ -1,6 +1,7 @@
 import request from "supertest";
 import { beforeEach, describe, expect, it } from "vitest";
 import { OFFER, STUDENT } from "../src/db/seed/seedIds.ts";
+import { createTestDatabase } from "./helpers/testDatabase.ts";
 import { createTestApp, tokenFor } from "./helpers/testApp.ts";
 
 let app: ReturnType<typeof createTestApp>;
@@ -88,6 +89,14 @@ describe("DELETE /applications/:id", () => {
       .send({ offerId: OFFER.INTERNAL_CHATBOT });
     expect(reapplied.status).toBe(201);
     expect(reapplied.body.id).not.toBe(created.body.id);
+
+    const listed = await request(app).get("/applications").set("Authorization", token);
+    expect(
+      listed.body
+        .filter((application: { offerId: number }) => application.offerId === OFFER.INTERNAL_CHATBOT)
+        .map((application: { status: string }) => application.status)
+        .sort(),
+    ).toEqual(["IN_PROGRESS", "WITHDRAWN"]);
   });
 
   it("n'autorise pas le retrait d'une candidature d'un autre étudiant", async () => {
@@ -96,6 +105,76 @@ describe("DELETE /applications/:id", () => {
       .set("Authorization", tokenFor("STUDENT", STUDENT.IOANA_POPESCU));
 
     expect(response.status).toBe(404);
+  });
+});
+
+describe("GET /applications", () => {
+  it("liste toutes les tentatives de l'étudiant pour l'année courante", async () => {
+    const response = await request(app)
+      .get("/applications")
+      .set("Authorization", tokenFor("STUDENT", STUDENT.INES_HADDAD));
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveLength(2);
+    expect(response.body).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 2,
+          offerTitle: "Application React de gestion de flotte",
+          companyShortName: "Lumen Digital",
+          academicYear: "2026-2027",
+          status: "IN_PROGRESS",
+        }),
+        expect.objectContaining({
+          id: 5,
+          offerTitle: "API REST de facturation",
+          status: "WITHDRAWN",
+        }),
+      ]),
+    );
+  });
+
+  it("ne renvoie pas les candidatures d'une autre année", async () => {
+    const db = createTestDatabase();
+    db.prepare("INSERT INTO applications (offer_id, student_id) VALUES (?, ?)").run(
+      OFFER.ARCHIVE_DIGITIZATION,
+      STUDENT.INES_HADDAD,
+    );
+
+    const response = await request(createTestApp(db))
+      .get("/applications")
+      .set("Authorization", tokenFor("STUDENT", STUDENT.INES_HADDAD));
+
+    expect(response.status).toBe(200);
+    expect(response.body.map((application: { id: number }) => application.id)).toEqual([2, 5]);
+  });
+
+  it("expose les candidatures retenues et non retenues", async () => {
+    const selected = await request(app)
+      .get("/applications")
+      .set("Authorization", tokenFor("STUDENT", STUDENT.MATEUSZ_KOWALSKI));
+    const rejected = await request(app)
+      .get("/applications")
+      .set("Authorization", tokenFor("STUDENT", STUDENT.LEA_MERTENS));
+
+    expect(selected.body).toEqual(
+      expect.arrayContaining([expect.objectContaining({ status: "SELECTED" })]),
+    );
+    expect(rejected.body).toEqual(
+      expect.arrayContaining([expect.objectContaining({ status: "REJECTED" })]),
+    );
+  });
+
+  it("refuse l'accès aux profils autres qu'étudiant", async () => {
+    const admin = await request(app)
+      .get("/applications")
+      .set("Authorization", tokenFor("ADMIN", 1));
+    const contact = await request(app)
+      .get("/applications")
+      .set("Authorization", tokenFor("CONTACT", 2));
+
+    expect(admin.status).toBe(403);
+    expect(contact.status).toBe(403);
   });
 });
 

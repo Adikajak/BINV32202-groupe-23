@@ -13,6 +13,21 @@ const renderNavBar = (user: User) =>
   );
 
 describe("NavBar", () => {
+  it("propose ses candidatures uniquement à un étudiant", () => {
+    const { rerender } = renderNavBar(studentUser);
+    expect(screen.getByRole("link", { name: "Mes candidatures" })).toHaveAttribute(
+      "href",
+      "/mes-candidatures",
+    );
+
+    rerender(
+      <MemoryRouter>
+        <NavBar user={adminUser} />
+      </MemoryRouter>,
+    );
+    expect(screen.queryByRole("link", { name: "Mes candidatures" })).not.toBeInTheDocument();
+  });
+
   it.each([
     ["un administrateur", adminUser],
     ["un étudiant", studentUser],

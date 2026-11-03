@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { toApplicationDto } from "../mappers/application.mapper.ts";
+import { toApplicationDto, toApplicationListItemDto } from "../mappers/application.mapper.ts";
 import { getCurrentUser } from "../middlewares/authenticate.ts";
 import type { ApplicationsService } from "../services/applications.service.ts";
 import { HttpError } from "../utils/httpError.ts";
@@ -47,6 +47,10 @@ const parsePathId = (value: string): number => {
 
 export const createApplicationsRouter = (service: ApplicationsService) => {
   const router = Router();
+
+  router.get("/", (req, res) => {
+    res.json(service.listForStudent(getCurrentUser(req)).map(toApplicationListItemDto));
+  });
 
   router.post("/", (req, res) => {
     const { offerId, message } = parseApplicationBody(req.body);

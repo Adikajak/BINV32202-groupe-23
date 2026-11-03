@@ -55,6 +55,24 @@ describe("App : session", () => {
     expect(screen.getByRole("link", { name: "Entreprises" })).toBeInTheDocument();
   });
 
+  it("ouvre la page des candidatures de l'étudiant", async () => {
+    localStorage.setItem(TOKEN_KEY, "jeton-mateusz");
+    const fetchMock = stubFetch({
+      "/api/auth/me": () => Response.json(studentUser),
+      "/api/health": () => Response.json({ status: "ok" }),
+      "/api/applications": () => Response.json([]),
+    });
+
+    renderApp();
+    fireEvent.click(await screen.findByRole("link", { name: "Mes candidatures" }));
+
+    expect(await screen.findByRole("heading", { name: "Mes candidatures" })).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/applications",
+      expect.objectContaining({ headers: { Authorization: "jeton-mateusz" } }),
+    );
+  });
+
   it("oublie une session refusée par le backend", async () => {
     localStorage.setItem(TOKEN_KEY, "jeton-expire");
     stubFetch({

@@ -104,6 +104,11 @@ body {
   color: #4b5563;
 }
 
+.application-message {
+  display: block;
+  color: #4b5563;
+}
+
 /* Tableaux */
 
 .table-wrapper {

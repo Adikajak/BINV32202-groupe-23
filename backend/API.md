@@ -180,6 +180,38 @@ autres profils.
 - `403` `FORBIDDEN` : contact seulement promoteur ou signataire.
 - `400` `INVALID_QUERY` : `period` est répété ou ne vaut pas `P1`, `P2` ou `OTHER`.
 
+## GET /applications
+
+Liste les candidatures de l'étudiant connecté pour l'année académique courante. Toutes ses
+tentatives sont retournées, y compris les candidatures retirées et les candidatures
+antérieures à une recandidature.
+
+### Réponses
+
+- `200` : tableau de candidatures, de la plus récente à la plus ancienne
+
+```json
+[
+  {
+    "id": 7,
+    "offerId": 7,
+    "offerTitle": "Assistant IA interne",
+    "companyShortName": "Nebula",
+    "academicYear": "2026-2027",
+    "period": "P2",
+    "message": "Message facultatif",
+    "status": "IN_PROGRESS",
+    "appliedAt": "2026-10-15 12:00:00"
+  }
+]
+```
+
+`status` vaut `IN_PROGRESS`, `SELECTED`, `REJECTED` ou `WITHDRAWN`. Seul un étudiant peut
+consulter cette liste ; elle ne révèle pas les candidatures d'autres étudiants.
+
+- `401` `UNAUTHENTICATED` : session absente ou invalide
+- `403` `FORBIDDEN` : l'utilisateur n'est pas un étudiant
+
 ## POST /applications
 
 Permet à un étudiant connecté de candidater à une offre publiée.

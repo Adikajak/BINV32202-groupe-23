@@ -1,5 +1,5 @@
-import { toApplication } from "../mappers/application.mapper.ts";
-import type { Application } from "../models/application.ts";
+import { toApplication, toApplicationListItem } from "../mappers/application.mapper.ts";
+import type { Application, ApplicationListItem } from "../models/application.ts";
 import type { User } from "../models/user.ts";
 import type { ApplicationsRepository } from "../repositories/applications.repository.ts";
 import type { OffersRepository } from "../repositories/offers.repository.ts";
@@ -16,6 +16,11 @@ export const createApplicationsService = (
   applicationsRepository: ApplicationsRepository,
   offersRepository: OffersRepository,
 ) => ({
+  listForStudent: (user: User): ApplicationListItem[] => {
+    requireStudent(user);
+    return applicationsRepository.listForStudentCurrentYear(user.id).map(toApplicationListItem);
+  },
+
   apply: (user: User, offerId: number, message: string | null): Application => {
     requireStudent(user);
     const offer = offersRepository.findAll({}).find((candidate) => candidate.id === offerId);
