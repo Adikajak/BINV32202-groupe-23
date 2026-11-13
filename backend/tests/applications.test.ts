@@ -1,6 +1,6 @@
 import request from "supertest";
 import { beforeEach, describe, expect, it } from "vitest";
-import { OFFER, STUDENT } from "../src/db/seed/seedIds.ts";
+import { APPLICATION, OFFER, STUDENT } from "../src/db/seed/seedIds.ts";
 import { createTestDatabase } from "./helpers/testDatabase.ts";
 import { createTestApp, tokenFor } from "./helpers/testApp.ts";
 
@@ -42,6 +42,7 @@ describe("POST /applications", () => {
       .set("Authorization", token)
       .send({ offerId: 2 });
     expect(unpublished.status).toBe(409);
+    expect(unpublished.body.error.code).toBe("OFFER_NOT_PUBLISHED");
 
     const first = await request(app)
       .post("/applications")
@@ -53,6 +54,7 @@ describe("POST /applications", () => {
       .set("Authorization", token)
       .send({ offerId: OFFER.INTERNAL_CHATBOT });
     expect(duplicate.status).toBe(409);
+    expect(duplicate.body.error.code).toBe("APPLICATION_EXISTS");
   });
 
   it("refuse un message trop long et les contacts", async () => {
@@ -106,6 +108,20 @@ describe("DELETE /applications/:id", () => {
 
     expect(response.status).toBe(404);
   });
+
+  it.each([
+    [APPLICATION.MATEUSZ_CLOUD_MIGRATION, STUDENT.MATEUSZ_KOWALSKI, "SELECTED"],
+    [APPLICATION.LEA_CLOUD_MIGRATION, STUDENT.LEA_MERTENS, "REJECTED"],
+  ] as const)("refuse de retirer une candidature déjà traitée (%s)", async (id, studentId, status) => {
+    const token = tokenFor("STUDENT", studentId);
+    const response = await request(app).delete(`/applications/${id}`).set("Authorization", token);
+
+    expect(response.status).toBe(409);
+    expect(response.body.error.code).toBe("APPLICATION_PROCESSED");
+
+    const listed = await request(app).get("/applications").set("Authorization", token);
+    expect(listed.body).toEqual(expect.arrayContaining([expect.objectContaining({ id, status })]));
+  });
 });
 
 describe("GET /applications", () => {
@@ -115,7 +131,9 @@ describe("GET /applications", () => {
       .set("Authorization", tokenFor("STUDENT", STUDENT.INES_HADDAD));
 
     expect(response.status).toBe(200);
-    expect(response.body).toHaveLength(2);
+    expect(response.body.map((application: { id: number }) => application.id).sort()).toEqual([
+      2, 5,
+    ]);
     expect(response.body).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
