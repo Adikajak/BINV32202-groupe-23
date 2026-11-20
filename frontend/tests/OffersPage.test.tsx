@@ -58,6 +58,55 @@ describe("OffersPage", () => {
     expect(screen.getByText("Toutes les offres, tous statuts confondus.")).toBeInTheDocument();
   });
 
+  it("combine la recherche par titre avec la période et explique une absence de résultat", async () => {
+    const fetchMock = stubFetch({ "/api/offers": () => Response.json([]) });
+
+    render(<OffersPage user={contactUser} token="jeton" onUnauthorized={vi.fn()} />);
+
+    fireEvent.change(screen.getByRole("combobox", { name: "Période" }), {
+      target: { value: "P2" },
+    });
+    const searchInput = screen.queryByLabelText("Mot-clé");
+    expect(searchInput).toBeInTheDocument();
+    if (searchInput === null) return;
+
+    fireEvent.change(searchInput, {
+      target: { value: "  API REST  " },
+    });
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenLastCalledWith(
+        "/api/offers?period=P2&search=API%20REST",
+        expect.anything(),
+      ),
+    );
+    expect(
+      await screen.findByText("Aucune offre ne correspond à votre recherche."),
+    ).toBeInTheDocument();
+  });
+
+  it("retire le filtre de recherche lorsque le champ est vidé", async () => {
+    const fetchMock = stubFetch({ "/api/offers": () => Response.json(offers) });
+
+    render(<OffersPage user={contactUser} token="jeton" onUnauthorized={vi.fn()} />);
+    expect(await screen.findByText("Refonte du portail client")).toBeInTheDocument();
+
+    const searchInput = screen.getByLabelText("Mot-clé");
+    fireEvent.change(searchInput, { target: { value: "portail" } });
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenLastCalledWith(
+        "/api/offers?search=portail",
+        expect.anything(),
+      ),
+    );
+
+    fireEvent.change(searchInput, { target: { value: "" } });
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenLastCalledWith("/api/offers", expect.anything()),
+    );
+    expect(screen.getByText("Refonte du portail client")).toBeInTheDocument();
+  });
+
   it("affiche un refus d'accès renvoyé par le backend", async () => {
     stubFetch({ "/api/offers": () => new Response(null, { status: 403 }) });
 

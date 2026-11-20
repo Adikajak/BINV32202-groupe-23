@@ -29,9 +29,11 @@ const PERIOD_OPTIONS: { value: PeriodCode | ""; label: string }[] = [
 
 const OffersPage = ({ user, token, onUnauthorized }: OffersPageProps) => {
   const [period, setPeriod] = useState<PeriodCode | "">("");
+  const [search, setSearch] = useState("");
   const { offers, isLoading, error, reload } = useOffers(
     token,
     period === "" ? undefined : period,
+    search,
     onUnauthorized,
   );
 
@@ -39,10 +41,24 @@ const OffersPage = ({ user, token, onUnauthorized }: OffersPageProps) => {
     setPeriod(event.target.value as PeriodCode | "");
   };
 
+  const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setSearch(event.target.value);
+  };
+
   const renderContent = () => {
     if (error) return <ErrorState message={error} />;
     if (isLoading) return <LoadingState />;
-    if (offers.length === 0) return <EmptyState message="Aucune offre à afficher." />;
+    if (offers.length === 0) {
+      return (
+        <EmptyState
+          message={
+            search.trim() === ""
+              ? "Aucune offre à afficher."
+              : "Aucune offre ne correspond à votre recherche."
+          }
+        />
+      );
+    }
     return (
       <>
         <p className="result-count">
@@ -72,6 +88,15 @@ const OffersPage = ({ user, token, onUnauthorized }: OffersPageProps) => {
             </option>
           ))}
         </select>
+      </label>
+      <label>
+        <span>Mot-clé</span>
+        <input
+          aria-label="Mot-clé"
+          type="search"
+          value={search}
+          onChange={handleSearchChange}
+        />
       </label>
       {renderContent()}
     </section>

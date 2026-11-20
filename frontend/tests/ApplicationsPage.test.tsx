@@ -65,6 +65,18 @@ describe("ApplicationsPage", () => {
     expect(screen.getAllByRole("button", { name: "Retirer" })).toHaveLength(1);
   });
 
+  it("affiche un état vide sans actions lorsqu'aucune candidature n'existe", async () => {
+    stubFetch({ "/api/applications": () => Response.json([]) });
+
+    render(<ApplicationsPage token="jeton" onUnauthorized={vi.fn()} />);
+
+    expect(
+      await screen.findByText("Vous n'avez pas encore candidaté cette année."),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  });
+
   it("retire une candidature en cours puis actualise son statut", async () => {
     let withdrawn = false;
     stubFetch({

@@ -150,6 +150,10 @@ récente à la plus ancienne, puis de la plus récente à la plus ancienne.
 ### Requête
 
 - Header `Authorization` obligatoire
+- Paramètre facultatif `period` : `P1`, `P2` ou `OTHER`.
+- Paramètre facultatif `search` : texte recherché dans le titre, sans distinction de casse.
+  Les espaces extérieurs sont ignorés; une recherche vide n'applique aucun filtre et les mots
+  sont recherchés comme une expression entière. Les deux filtres peuvent être combinés.
 
 ### Réponses
 
@@ -179,6 +183,7 @@ autres profils.
 - `401` `UNAUTHENTICATED` : session absente ou invalide.
 - `403` `FORBIDDEN` : contact seulement promoteur ou signataire.
 - `400` `INVALID_QUERY` : `period` est répété ou ne vaut pas `P1`, `P2` ou `OTHER`.
+  Le paramètre `search` est également invalide s'il est répété.
 
 ## GET /applications
 
